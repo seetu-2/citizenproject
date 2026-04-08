@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth, Role } from "@/context/AuthContext";
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, setOtpVerified } = useAuth();
   const router = useRouter();
 
   const [name, setName] = useState("");
@@ -39,8 +39,9 @@ export default function LoginPage() {
     }
 
     login({ name, email, password, role });
-
-    router.push(`/${role}/dashboard`);
+    localStorage.setItem("postOtpRedirect", `/${role}/dashboard`);
+    setOtpVerified(false);
+    router.push("/otp-verification");
   };
 
   return (

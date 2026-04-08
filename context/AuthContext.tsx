@@ -19,14 +19,19 @@ type User = {
 
 type AuthContextType = {
   user: User | null;
+  otpVerified: boolean;
   login: (user: Omit<User, "id">) => void;
   logout: () => void;
+  setOtpVerified: (verified: boolean) => void;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [otpVerified, setOtpVerifiedState] = useState<boolean>(() => {
+    return typeof window !== "undefined" && localStorage.getItem("otpVerified") === "true";
+  });
   const router = useRouter();
 
   useEffect(() => {
@@ -34,6 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
+    setOtpVerifiedState(localStorage.getItem("otpVerified") === "true");
   }, []);
 
   const login = (userData: Omit<User, "id">) => {
@@ -46,14 +52,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(userWithId);
   };
 
+  const setOtpVerified = (verified: boolean) => {
+    localStorage.setItem("otpVerified", verified ? "true" : "false");
+    setOtpVerifiedState(verified);
+  };
+
   const logout = () => {
     localStorage.removeItem("authUser");
+    localStorage.removeItem("otpVerified");
+    localStorage.removeItem("postOtpRedirect");
     setUser(null);
+    setOtpVerifiedState(false);
     router.push("/login");
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, otpVerified, login, logout, setOtpVerified }}>
       {children}
     </AuthContext.Provider>
   );

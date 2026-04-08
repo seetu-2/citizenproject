@@ -11,7 +11,7 @@ export default function ProtectedRoute({
   children: React.ReactNode;
   allowedRoles: Role[];
 }) {
-  const { user } = useAuth();
+  const { user, otpVerified } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -20,12 +20,18 @@ export default function ProtectedRoute({
       return;
     }
 
+    if (!otpVerified) {
+      localStorage.setItem("postOtpRedirect", `/${user.role}/dashboard`);
+      router.push("/otp-verification");
+      return;
+    }
+
     if (!allowedRoles.includes(user.role)) {
       router.push("/login");
     }
-  }, [user]);
+  }, [user, otpVerified, allowedRoles, router]);
 
-  if (!user || !allowedRoles.includes(user.role)) {
+  if (!user || !otpVerified || !allowedRoles.includes(user.role)) {
     return null;
   }
 
